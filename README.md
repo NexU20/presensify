@@ -1,6 +1,6 @@
 <div align="center">
   <h1>✨ Presensify ✨</h1>
-  <p><strong>Automasi Presensi KKN UIN Jakarta dengan Gaya</strong></p>
+  <p><strong>Presensi dengan Gaya</strong></p>
   
   <p>
     <a href="#tech-stack">Tech Stack</a> •
