@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
+  <h1>✨ Presensify ✨</h1>
+  <p><strong>Automasi Presensi KKN UIN Jakarta dengan Gaya</strong></p>
+  
+  <p>
+    <a href="#fitur-utama">Fitur</a> •
+    <a href="#tech-stack">Tech Stack</a> •
+    <a href="#instalasi">Instalasi</a>
+  </p>
+</div>
 
-## Getting Started
+---
 
-First, run the development server:
+## 🚀 Apa itu Presensify?
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Presensify** adalah aplikasi web modern berbasis Next.js yang dirancang khusus untuk mempermudah proses login dan absensi KKN UIN Syarif Hidayatullah Jakarta (`presensi.ppmuinjkt.com`). 
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ucapkan selamat tinggal pada rutinitas presensi yang membosankan! Presensify mengotomatisasi proses *HTTP session* ke portal rektorat dengan antarmuka **Dark Neumorphism** premium, dilengkapi peta interaktif mutakhir dan optimasi gambar otomatis.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ✨ Fitur Utama
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 🎨 **Dark Neumorphic UI**: Tampilan yang modern, elegan, dan *seamless* memanjakan mata.
+- 📍 **Smart Location Picker**: Peta interaktif (Leaflet + Nominatim) dengan deteksi lokasi otomatis & *reverse-geocoding*.
+- 📸 **Smart Camera Upload**: Dukungan penuh kamera perangkat dengan konversi gambar otomatis ke `.webp` (*client-side*) untuk upload super cepat.
+- ⚡ **Zero-Knowledge Focus**: Privasi aman tanpa *logging* kredensial *plaintext*.
+- 📱 **Fully Responsive**: Teroptimasi penuh untuk digunakan di lintas perangkat (*mobile/desktop*).
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend Core**: Next.js (App Router), React, TypeScript
+- **Styling**: Tailwind CSS, Vanilla CSS (Neumorphism Design System)
+- **Map Engine**: Leaflet (dengan ResizeObserver fallback)
+- **Backend**: Next.js Route Handlers (Server Actions)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📦 Instalasi & Penggunaan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Untuk mencoba Presensify di *local environment* Anda:
 
-## Deploy on Vercel
+1. **Kloning Repositori**
+   ```bash
+   git clone https://github.com/NexU20/presensify.git
+   cd presensify
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Install dependensi**
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Jalankan *Development Server***
+   ```bash
+   npm run dev
+   ```
+
+4. Buka [http://localhost:3000](http://localhost:3000) di browser untuk mengakses presensify.
+
+## 🤝 Kontribusi
+
+Aplikasi ini bersifat *open-source*. Silakan melakukan *fork*, beri ⭐️ (*Star*), atau buat *Pull Request* bila memiliki pembaruan!
+
+---
+<div align="center">
+  <sub>Dibuat dengan ❤️ untuk mempermudah rekan-rekan mahasiswa.</sub>
+</div>
