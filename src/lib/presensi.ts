@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { NextRequest, NextResponse } from "next/server";
+import type { DashboardInfo } from "./types";
 
 export const BASE_URL = "https://presensi.ppmuinjkt.com";
 const LOGIN_URL = `${BASE_URL}/login`;
@@ -209,7 +210,80 @@ async function performLogin(
   requireCookie(jar, "ppm-security-session");
 }
 
-async function fetchDashboardToken(jar: CookieJar): Promise<string> {
+const STATUS_SELECT_RE =
+  /<select[^>]+name=["']status["'][^>]*>([\s\S]*?)<\/select>/i;
+const OPTION_VALUE_RE = /<option[^>]+value=["']([^"']+)["']/gi;
+
+/**
+ * Parse the portal dashboard HTML to extract attendance status info.
+ *
+ * Detection logic:
+ * - If the status dropdown contains "Hadir" → user has NOT submitted yet.
+ * - Otherwise (e.g. only "Pulang", or no dropdown) → user has already submitted.
+ */
+function parseDashboardHtml(html: string): DashboardInfo {
+  // --- Extract available status options from <select name="status"> ---
+  const selectMatch = STATUS_SELECT_RE.exec(html);
+  const availableOptions: string[] = [];
+
+  if (selectMatch?.[1]) {
+    let optionMatch: RegExpExecArray | null;
+    const optionRe = new RegExp(OPTION_VALUE_RE.source, "gi");
+    while ((optionMatch = optionRe.exec(selectMatch[1])) !== null) {
+      const value = optionMatch[1].trim();
+      if (value) {
+        availableOptions.push(value);
+      }
+    }
+  }
+
+  const alreadySubmitted = !availableOptions.includes("Hadir");
+
+  // --- Extract stats (Hadir / Izin / Sakit counts) ---
+  // The stats grid uses patterns like:
+  //   <div class="text-emerald-500 ...">6</div> ... Hadir
+  //   <div class="text-orange-500 ...">0</div>  ... Izin
+  //   <div class="text-brand-danger ...">0</div> ... Sakit
+  const statRe =
+    /class="[^"]*(?:text-emerald-500|text-orange-500|text-brand-danger)[^"]*"[^>]*>\s*(\d+)\s*<\/div>/gi;
+  const statValues: number[] = [];
+  let statMatch: RegExpExecArray | null;
+  while ((statMatch = statRe.exec(html)) !== null) {
+    statValues.push(parseInt(statMatch[1], 10));
+  }
+
+  const stats = {
+    hadir: statValues[0] ?? 0,
+    izin: statValues[1] ?? 0,
+    sakit: statValues[2] ?? 0,
+  };
+
+  // --- Extract Jam Masuk / Jam Pulang ---
+  // Look for the pattern: "Jam Masuk" ... <p class="...font-numbers">VALUE</p>
+  const jamRe =
+    /Jam\s+(Masuk|Pulang)[\s\S]*?class="[^"]*font-numbers[^"]*"[^>]*>\s*([^<]+)</gi;
+  let jamMasuk = "--:--";
+  let jamPulang = "--:--";
+  let jamMatch: RegExpExecArray | null;
+  while ((jamMatch = jamRe.exec(html)) !== null) {
+    const label = jamMatch[1].toLowerCase();
+    const value = jamMatch[2].trim();
+    if (label === "masuk") jamMasuk = value;
+    if (label === "pulang") jamPulang = value;
+  }
+
+  return {
+    alreadySubmitted,
+    availableOptions,
+    stats,
+    jamMasuk,
+    jamPulang,
+  };
+}
+
+async function fetchDashboardHtml(
+  jar: CookieJar,
+): Promise<{ html: string; token: string }> {
   const response = await fetchTarget(DASHBOARD_URL, {
     headers: buildHtmlHeaders(`${BASE_URL}/`, jar),
   });
@@ -224,7 +298,13 @@ async function fetchDashboardToken(jar: CookieJar): Promise<string> {
   requireCookie(jar, "XSRF-TOKEN");
   requireCookie(jar, "ppm-security-session");
 
-  return extractFormToken(await response.text());
+  const html = await response.text();
+  return { html, token: extractFormToken(html) };
+}
+
+async function fetchDashboardToken(jar: CookieJar): Promise<string> {
+  const { token } = await fetchDashboardHtml(jar);
+  return token;
 }
 
 function sessionToJar(session: SessionPayload): CookieJar {
@@ -258,6 +338,17 @@ export async function verifySession(
   const jar = sessionToJar(session);
   await fetchDashboardToken(jar);
   return jarToSession(jar);
+}
+
+export async function getDashboardInfo(
+  session: SessionPayload,
+): Promise<{ info: DashboardInfo; session: SessionPayload }> {
+  const jar = sessionToJar(session);
+  const { html } = await fetchDashboardHtml(jar);
+  return {
+    info: parseDashboardHtml(html),
+    session: jarToSession(jar),
+  };
 }
 
 export async function submitAttendance(

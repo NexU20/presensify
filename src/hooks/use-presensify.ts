@@ -12,6 +12,8 @@ import {
 import { convertImageToWebp, formatBytes } from "@/lib/image";
 import type {
   AttendanceResponse,
+  DashboardInfo,
+  DashboardInfoResponse,
   FeedbackTone,
   SessionResponse,
   StatusState,
@@ -60,6 +62,12 @@ export type FeedbackState = {
   statusMessage: string;
 };
 
+export type DashboardInfoState = {
+  dashboardInfo: DashboardInfo | null;
+  dashboardInfoLoading: boolean;
+  refreshDashboardInfo: () => void;
+};
+
 export type DerivedState = {
   controlsLocked: boolean;
   submitDisabled: boolean;
@@ -72,6 +80,7 @@ export type PresensifyHook = {
   photo: PhotoState;
   attendance: AttendanceState;
   feedback: FeedbackState;
+  portal: DashboardInfoState;
   derived: DerivedState;
 };
 
@@ -97,6 +106,8 @@ export function usePresensify(): PresensifyHook {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [attendanceResult, setAttendanceResult] =
     useState<AttendanceResponse | null>(null);
+  const [dashboardInfo, setDashboardInfo] = useState<DashboardInfo | null>(null);
+  const [dashboardInfoLoading, setDashboardInfoLoading] = useState(false);
 
   /* ---- internal helpers ---- */
 
@@ -138,6 +149,27 @@ export function usePresensify(): PresensifyHook {
     }
   }
 
+  async function fetchDashboardInfoFn() {
+    setDashboardInfoLoading(true);
+
+    try {
+      const response = await fetch("/api/dashboard-info", {
+        cache: "no-store",
+      });
+      const data = (await response.json()) as DashboardInfoResponse;
+
+      if (data.ok && data.data) {
+        setDashboardInfo(data.data);
+      } else {
+        setDashboardInfo(null);
+      }
+    } catch {
+      setDashboardInfo(null);
+    } finally {
+      setDashboardInfoLoading(false);
+    }
+  }
+
   /* ---- effects ---- */
 
   const hydrateSession = useEffectEvent(() => {
@@ -147,6 +179,14 @@ export function usePresensify(): PresensifyHook {
   useEffect(() => {
     hydrateSession();
   }, []);
+
+  useEffect(() => {
+    if (sessionReady) {
+      void fetchDashboardInfoFn();
+    } else {
+      setDashboardInfo(null);
+    }
+  }, [sessionReady]);
 
   useEffect(() => {
     return () => {
@@ -301,6 +341,10 @@ export function usePresensify(): PresensifyHook {
       setFeedbackTone(data.ok ? "success" : "danger");
       setStatusMessage(data.message);
 
+      if (data.ok) {
+        void fetchDashboardInfoFn();
+      }
+
       if (response.status === 401) {
         setSessionReady(false);
         clearPhotoState();
@@ -360,6 +404,11 @@ export function usePresensify(): PresensifyHook {
     feedback: {
       feedbackTone,
       statusMessage,
+    },
+    portal: {
+      dashboardInfo,
+      dashboardInfoLoading,
+      refreshDashboardInfo: () => void fetchDashboardInfoFn(),
     },
     derived: {
       controlsLocked,

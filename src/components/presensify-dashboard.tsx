@@ -1,6 +1,7 @@
 "use client";
 
 import { usePresensify } from "@/hooks/use-presensify";
+import AttendanceStatusCard from "./dashboard/attendance-status-card";
 import AuthPanel from "./dashboard/auth-panel";
 import CameraPanel from "./dashboard/camera-panel";
 import DashboardHeader from "./dashboard/dashboard-header";
@@ -8,7 +9,7 @@ import StatusPill from "./dashboard/status-pill";
 import SubmitPanel from "./dashboard/submit-panel";
 
 export default function PresensifyDashboard() {
-  const { session, login, photo, attendance, feedback, derived } =
+  const { session, login, photo, attendance, feedback, portal, derived } =
     usePresensify();
 
   return (
@@ -24,6 +25,12 @@ export default function PresensifyDashboard() {
         </div>
 
         <DashboardHeader />
+
+        <AttendanceStatusCard
+          dashboardInfo={portal.dashboardInfo}
+          loading={portal.dashboardInfoLoading}
+          sessionReady={session.sessionReady}
+        />
 
         <div className="grid gap-6 md:grid-cols-[1.05fr_0.95fr]">
           <AuthPanel
@@ -66,3 +73,4 @@ export default function PresensifyDashboard() {
     </main>
   );
 }
+
